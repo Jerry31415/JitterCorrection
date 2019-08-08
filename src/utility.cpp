@@ -42,6 +42,7 @@ TemplateInfo::TemplateInfo() {
 	channel = 0;
 	max_jitter = 0;
 	compare_treshold = 1;
+	max_itter = 4;
 }
 
 TemplateInfo::TemplateInfo(const TemplateInfo& obj){
@@ -51,4 +52,5 @@ TemplateInfo::TemplateInfo(const TemplateInfo& obj){
 	channel = obj.channel;
 	max_jitter = obj.max_jitter;
 	compare_treshold = obj.compare_treshold;
+	max_itter = obj.max_itter;
 }

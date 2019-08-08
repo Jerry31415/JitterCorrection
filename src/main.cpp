@@ -25,6 +25,8 @@ void createReport(const TemplateInfo& info){
 	f << "<tr><td>Channel:</td><td>" << info.channel << "</td></tr>\n";
 	f << "<tr><td>Template index:</td><td>" << info.template_index << "</td></tr>\n";
 	f << "<tr><td>Time range:</td><td> [" << info.begin_time_template << ", " << info.end_time_template << "]</td></tr>\n";
+	f << "<tr><td>Compare treshold:</td><td>" << info.compare_treshold << "</td></tr>\n";
+	f << "<tr><td>Itterations number:</td><td>" << info.max_itter << "</td></tr>\n";
 	f << "</table>\n<hr>";
 	
 	f << "Time shifts:\n<table border=\"1\">\n";
@@ -32,7 +34,12 @@ void createReport(const TemplateInfo& info){
 	for (int i = 0; i < time_shifts.size(); ++i) {
 		f << "<tr><td>" << i << "</td>";
 		f << "<td>" << time_shifts[i] << "</td>";
-		f << "<td>" << srcCorr.at<float>(info.template_index, i) << "</td>";
+		if (srcCorr.at<float>(info.template_index, i) >= info.compare_treshold){
+			f << "<td><b>" << srcCorr.at<float>(info.template_index, i) << "</b></td>";
+		}
+		else {
+			f << "<td>" << srcCorr.at<float>(info.template_index, i) << "</td>";
+		}
 		f << "<td>" << dstCorr.at<float>(info.template_index, i) << "</td>";
 		f << "</tr>";
 	}
@@ -49,14 +56,21 @@ void createReport(const TemplateInfo& info){
 	f.close();
 }
 
+//#define DEBUG
+
 int main(int argc, char** argv){
 	system(std::string("mkdir " + path).c_str());
 	TemplateInfo info;
+	ecg_filename = "d.csv";
+	qrs_markers_filename = "rr.txt";
 	info.channel = 0; // channel index
-	info.template_index = 4; // marker index
-	info.begin_time_template = -400; // begin template delta time
-	info.end_time_template = 700; // end template delta time
-	if (argc < 7){
+	info.template_index = 5; // marker index
+	info.begin_time_template = -100; // begin template delta time
+	info.end_time_template = 100; // end template delta time
+	info.compare_treshold = 0.95;
+	info.max_itter = 4;
+#ifndef DEBUG 
+	if (argc < 8){
 		std::cerr << "Error: incorrect arguments\n";
 		system("pause");
 		std::exit(-1);
@@ -67,6 +81,8 @@ int main(int argc, char** argv){
 	info.template_index = std::stoi(argv[4]);
 	info.begin_time_template = std::stof(argv[5]);
 	info.end_time_template = std::stof(argv[6]);
+	info.compare_treshold = std::stof(argv[7]);
+#endif
 	std::string text_index = "; Marker index:" + toString(info.template_index);
 	Mat im;
 	// read ecg and qrs markers

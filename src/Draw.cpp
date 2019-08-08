@@ -1,5 +1,6 @@
 #include "ECG.h"
 #include "QRSMarkers.h"
+#include "QRSCorrector.h"
 #include "Draw.h"
 #include <opencv2\imgproc\imgproc.hpp>
 #include <opencv\cv.h>
@@ -63,12 +64,26 @@ void DrawCardTemplate(Ecg& card, QRSMarkers& qrs, const TemplateInfo& info, Mat&
 	int height = 1024;
 	int scale_width = 16;
 	int cnt = -1;
-
 	float begin_time_range = qrs[info.template_index] + info.begin_time_template / 1000;
 	float end_time_range = qrs[info.template_index] + info.end_time_template / 1000;
 	Vec2i tind = card.range2indexes(begin_time_range, end_time_range);
 	int s = tind[1] - tind[0];
-	for (int qrs_index = 0; qrs_index < qrs.size(); ++qrs_index){
+	Scalar color_line(255, 255, 255);
+	std::vector<int> cindx;
+	for (int i = 0; i < qrs.size(); ++i){
+		float C = PCorrelation(card, qrs, info.template_index, i, info.begin_time_template, info.end_time_template, info.channel);
+		if (C >= info.compare_treshold) {
+			cindx.push_back(i);
+		}
+	}
+
+	for (auto& qrs_index : cindx){
+		if (qrs_index == info.template_index){
+			color_line = Scalar(0,255,0);
+		}
+		else {
+			color_line = Scalar(255, 255, 255);
+		}
 		begin_time_range = qrs[qrs_index] + info.begin_time_template / 1000;
 		end_time_range = qrs[qrs_index] + info.end_time_template / 1000;
 		Vec2i rind = card.range2indexes(begin_time_range, end_time_range);
@@ -100,11 +115,12 @@ void DrawCardTemplate(Ecg& card, QRSMarkers& qrs, const TemplateInfo& info, Mat&
 			}
 			curr_point.x = cnt;
 			curr_point.y = pos_y;
-			line(dst, prev_point, curr_point, Scalar(255, 255, 255), 1);
+			line(dst, prev_point, curr_point, color_line, 1);
 			prev_point = curr_point;
 		}
 
 	}
+	text += "; Compare tresh:" + toString(info.compare_treshold);
 	putText(dst, text, Point2i(8, 32), CV_FONT_HERSHEY_DUPLEX, 1, Scalar(0, 255, 0), 1);
 }
 

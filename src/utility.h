@@ -24,7 +24,7 @@ struct TemplateInfo{
 	float compare_treshold;
 	int template_index;
 	int channel;
-
+	int max_itter;
 	TemplateInfo();
 	TemplateInfo(const TemplateInfo& obj);
 };
